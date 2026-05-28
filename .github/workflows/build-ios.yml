@@ -1,0 +1,71 @@
+name: Build MAUI iOS App Bundle
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-15
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.4.app
+          echo "Selected Xcode:"
+          xcodebuild -version
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui --source https://api.nuget.org/v3/index.json
+
+      - name: Build iOS App Bundle Unsigned
+        run: |
+          # 🔧 Указываем ПУТЬ К ВАШЕМУ главному проекту
+          CSPROJ="./MainNfcDemo/MainNfcDemo.csproj"
+          
+          echo "Building project: $CSPROJ"
+          
+          dotnet publish "$CSPROJ" \
+            -f net8.0-ios \
+            -c Release \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:BuildIpa=false \
+            -p:ArchiveOnBuild=false \
+            -p:CodesignKey="" \
+            -p:CodesignProvision="" \
+            -p:CodesignEntitlements="" \
+            -p:TargetFrameworks=net8.0-ios \
+            -p:MauiVersion=8.0.100 \
+            -p:EnableCodeSigning=false \
+            -p:SkipCodesigning=true \
+            -p:ProvisioningProfile=""
+
+      - name: Copy App Bundle to Output
+        run: |
+          # Ищем .app в bin/
+          APP_DIR=$(find . -type d -name "*.app" -path "*/bin/*" 2>/dev/null | head -n 1)
+          
+          if [ -z "$APP_DIR" ]; then
+            echo "ERROR: .app not found. Searching everywhere:"
+            find . -type d -name "*.app" 2>/dev/null
+            exit 1
+          fi
+          
+          echo "Found: $APP_DIR"
+          
+          # Копируем в фиксированную папку
+          mkdir -p output
+          cp -R "$APP_DIR" output/MainNfcDemo.app
+          
+          echo "Copied. Contents:"
+          ls -la output/MainNfcDemo.app/ | head -20
+
+      - name: Upload App Bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app-bundle
+          path: output/MainNfcDemo.app
