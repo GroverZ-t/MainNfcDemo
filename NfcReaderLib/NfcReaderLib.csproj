@@ -10,11 +10,11 @@
 
 	<ImplicitUsings>enable</ImplicitUsings>
 
-	 <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net.9.0-android'"></SupportedOSPlatformVersion>
+	 <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net.8.0-android'"></SupportedOSPlatformVersion>
 	  
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net.9.0-android'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net.8.0-android'">
     <PackageReference Include="Plugin.NFC" Version="0.1.26" />
   </ItemGroup>
 
